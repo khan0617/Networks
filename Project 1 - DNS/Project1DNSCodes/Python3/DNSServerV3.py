@@ -6,7 +6,7 @@
 #	Hamza Khan
 
 import sys, threading, os, random, json
-import fcntl, csv
+import fcntl, csv, subprocess, math
 from socket import *
 from typing import List, Tuple
 
@@ -64,15 +64,34 @@ def dnsQuery(connectionSock: socket, srcAddress: Tuple[str, str]):
 	#Close the server socket.
 	pass
   
-def dnsSelection(ipList: List[str]):
-	#checking the number of IP addresses in the cache
-	#if there is only one IP address, return the IP address
+def dnsSelection(ipList: List[str]) -> str:
+	"""Given a list of ip addresses, return the best one,
+	determined by ping latency."""
+
+	# If there's only one IP address, return it directly
 	if len(ipList) == 1:
 		return ipList[0]
-	# TODO
-	#if there are multiple IP addresses, select one and return.
-	##optional: return the IP address according to the Ping value for better performance (lower latency)
-	pass
+
+	# compare all ips' latency and pick the lowest one.
+	bestIp = ipList[0]
+	bestLatency = math.inf
+	for ip in ipList:
+		latency = getPingLatency(ip)
+		print(f'ip addr {ip} had latency {latency}')
+		if latency < bestLatency:
+			bestIp = ip
+			bestLatency = latency
+
+	print(f'*** In dnsSelection, best ip is {bestIp} with latency {bestLatency}.')
+	return bestIp
+
+def getPingLatency(ip: str) -> float:
+	"""Given an ip address, ping it, and return the latency in ms."""
+	ping_output = subprocess.run(['ping', '-c', '1', ip], capture_output=True, text=True)
+	latency_start = ping_output.stdout.find('time=') + len('time=')
+	latency_end = ping_output.stdout.find(' ms', latency_start)
+	latency = float(ping_output.stdout[latency_start:latency_end])
+	return latency
 
 def monitorQuit() -> None:
 	while 1:
