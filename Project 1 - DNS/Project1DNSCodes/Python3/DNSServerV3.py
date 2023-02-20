@@ -1,20 +1,28 @@
 # Spring 2023 CSci4211: Introduction to Computer Networks
 # This program serves as the server of DNS query.
 # Written in Python v3.
+# Authors: 
+# 	Skeleton provided by CSCI 4211 staff.
+#	Hamza Khan
 
-import sys, threading, os, random
+import sys, threading, os, random, json
 from socket import *
+
+DNS_CACHE_FILENAME = 'DNS_CACHE.json'
+DNS_CACHE = None
 
 def main():
 	host = "localhost" # Hostname. It can be changed to anything you desire.
 	port = 5001 # Port number.
 
-	#create a socket object, SOCK_STREAM for TCP
+	# create a socket object, SOCK_STREAM for TCP
+	serverSock = socket(AF_INET, SOCK_STREAM)
 
-	#bind socket to the current address on port
+	# bind socket to the current address on port
+	serverSock.bind((host, port))
 
-	#Listen on the given socket maximum number of connections queued is 20
-	
+	# Listen on the given socket maximum number of connections queued is 20
+	serverSock.listen(20)
 
 	monitor = threading.Thread(target=monitorQuit, args=[])
 	monitor.start()
@@ -22,13 +30,15 @@ def main():
 	print("Server is listening...")
 
 	while 1:
-		#blocked until a remote machine connects to the local port
-		connectionSock, addr = sSock.accept()
+		# blocked until a remote machine connects to the local port
+		connectionSock, addr = serverSock.accept()
 		server = threading.Thread(target=dnsQuery, args=[connectionSock, addr[0]])
 		server.start()
 
-def dnsQuery(connectionSock, srcAddress):
-	#check the DNS_mapping.txt to see if the host name exists
+def dnsQuery(connectionSock: socket, srcAddress: tuple[str, str]):
+	# check the DNS_CACHE to see if the host name exists
+	if (hostname := connectionSock.getpeername()[1]) in DNS_CACHE:
+		pass
 	#set local file cache to predetermined file.
         #create file if it doesn't exist 
         #if it does exist, read the file line by line to look for a
@@ -40,17 +50,37 @@ def dnsQuery(connectionSock, srcAddress):
 	#print response to the terminal
 	#send the response back to the client
 	#Close the server socket.
+	pass
   
 def dnsSelection(ipList):
 	#checking the number of IP addresses in the cache
 	#if there is only one IP address, return the IP address
 	#if there are multiple IP addresses, select one and return.
 	##optional: return the IP address according to the Ping value for better performance (lower latency)
+	pass
 
-def monitorQuit():
+def monitorQuit() -> None:
 	while 1:
 		sentence = input()
 		if sentence == "exit":
+			updateDNSCache()
 			os.kill(os.getpid(),9)
 
-main()
+def loadDNSCache() -> None:
+	"""Load the DNS_CACHE global variable with the contents of the
+	DNS_CACHE.json file. Each key: value pair is as follows: \n
+	{hostname: ipaddr}"""
+	global DNS_CACHE
+	with open(DNS_CACHE_FILENAME) as f:
+		DNS_CACHE = json.load(f)
+
+def updateDNSCache() -> None:
+	"""Update the DNS_CACHE.json file with the up to date
+	DNS_CACHE global variable. Call this before exiting the program."""
+	with open(DNS_CACHE_FILENAME) as f:
+		json.dump(DNS_CACHE, f)
+
+
+if __name__ == "main":
+	loadDNSCache()
+	main()
