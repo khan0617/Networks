@@ -6,11 +6,13 @@
 #	Hamza Khan
 
 import sys, threading, os, random, json
+import fcntl, csv
 from socket import *
 from typing import List, Tuple
 
-DNS_CACHE_FILENAME = 'DNS_CACHE.json'
 DNS_CACHE = None
+DNS_CACHE_FILENAME = 'DNS_CACHE.json'
+SERVER_LOG_FILENAME = 'dns-server-log.csv'
 
 def main():
 	host = 'localhost' # Hostname. It can be changed to anything you desire.
@@ -65,6 +67,9 @@ def dnsQuery(connectionSock: socket, srcAddress: Tuple[str, str]):
 def dnsSelection(ipList: List[str]):
 	#checking the number of IP addresses in the cache
 	#if there is only one IP address, return the IP address
+	if len(ipList) == 1:
+		return ipList[0]
+	# TODO
 	#if there are multiple IP addresses, select one and return.
 	##optional: return the IP address according to the Ping value for better performance (lower latency)
 	pass
@@ -93,7 +98,20 @@ def updateDNSCache() -> None:
 	"""Update the DNS_CACHE.json file with the up to date
 	DNS_CACHE global variable. Call this before exiting the program."""
 	with open(DNS_CACHE_FILENAME, 'w') as f:
+		fcntl.flock(f, fcntl.LOCK_EX)
 		json.dump(DNS_CACHE, f)
+		fcntl.flock(f, fcntl.LOCK_UN)
+
+def updateServerLog(hostname: str, answer: str, resolution: str) -> None:
+	"""Update the server log file in the following format:\n
+	www.google.com,172.217.0.164,API"""
+
+	with open(SERVER_LOG_FILENAME, 'a', newline='') as f:
+		# lock the file and write one row to it
+		fcntl.flock(f, fcntl.LOCK_EX)
+		writer = csv.writer(f)
+		writer.writerow([hostname, answer, resolution])
+		fcntl.flock(f, fcntl.LOCK_UN)
 
 if __name__ == "main":
 	loadDNSCache()
