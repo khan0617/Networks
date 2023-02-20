@@ -38,36 +38,57 @@ def main():
 		server = threading.Thread(target=dnsQuery, args=[connectionSock, addr[0]])
 		server.start()
 
-def dnsQuery(connectionSock: socket, srcAddress: Tuple[str, str]):
+def dnsQuery(connectionSock: socket, srcAddress: Tuple[str, str]) -> None:
+	print('In dnsQuery()')
 	global DNS_CACHE
+	# we'll need to build a response like "hostname>:<answer>:<how request was resolved>"
+	responseHostname = domainName
+	responseAnswer = None
+	responseResolutionMethod = None
+
+	# actually receive the domain name from the client
+	domainName = connectionSock.recv(1024).decode()
 
 	# check the DNS_CACHE to see if the host name exists
 	ipAddrs = []
-	clientHostname, clientPort = connectionSock.getpeername()
-	if clientHostname in DNS_CACHE:
-		ipAddrs = DNS_CACHE[clientHostname]
+	if domainName in DNS_CACHE:
+		print(f'Found {domainName} in DNS cache.')
+		responseResolutionMethod = 'CACHE'
+		ipAddrs = DNS_CACHE[domainName]
+
+	# query the DNS and add it to the cache.
 	else:
-		pass
+		try:
+			ipFromDnsQuery = gethostbyname(domainName)
+			DNS_CACHE[domainName] = [ipFromDnsQuery]
 
-	bestIp = dnsSelection(ipAddrs)
+		except gaierror:
+			print(f'Error: Failed to resolve {domainName}')
+			DNS_CACHE[domainName] = ['Host not found']
 
-	#set local file cache to predetermined file.
-        #create file if it doesn't exist 
-        #if it does exist, read the file line by line to look for a
-        #match with the query sent from the client
-        #If match, use the entry in cache.
-            #However, we may get multiple IP addresses in cache, so call dnsSelection to select one.
-	#If no lines match, query the local machine DNS lookup to get the IP resolution
-	#write the response in DNS_mapping.txt
-	#print response to the terminal
-	#send the response back to the client
-	#Close the server socket.
-	pass
+		finally:
+			responseResolutionMethod = 'API'
+			updateDNSCache()
+
+	# build and send the message to the client.
+	responseAnswer = dnsSelection(ipAddrs) if ipAddrs else 'Host not found'
+	message = f'{domainName}:{responseAnswer}:{responseResolutionMethod}'
+	print(f'Sending this message to client: {message}')
+
+	# send the response back to the client
+	messageBytes = message.encode('utf-8')
+	connectionSock.send(messageBytes)
+
+	# write the message to the server's log file.
+	updateServerLog(domainName, responseAnswer, responseResolutionMethod)
+
+	# Close the server socket.
+	connectionSock.close()
   
 def dnsSelection(ipList: List[str]) -> str:
 	"""Given a list of ip addresses, return the best one,
 	determined by ping latency."""
-
+	print('Selecting best IP address to return')
 	# If there's only one IP address, return it directly
 	if len(ipList) == 1:
 		return ipList[0]
@@ -82,7 +103,7 @@ def dnsSelection(ipList: List[str]) -> str:
 			bestIp = ip
 			bestLatency = latency
 
-	print(f'*** In dnsSelection, best ip is {bestIp} with latency {bestLatency}.')
+	print(f'*** In dnsSelection, best ip is {bestIp} with latency {bestLatency}. ***')
 	return bestIp
 
 def getPingLatency(ip: str) -> float:
@@ -98,12 +119,14 @@ def monitorQuit() -> None:
 		sentence = input()
 		if sentence == 'exit':
 			updateDNSCache()
+			print('Terminating server. Goodbye...')
 			os.kill(os.getpid(),9)
 
 def loadDNSCache() -> None:
 	"""Load the DNS_CACHE global variable with the contents of the
 	DNS_CACHE.json file. Each key: value pair is as follows: \n
 	{hostname: [ipaddr1, ipaddr2, ...]}"""
+	print(f'Loading {DNS_CACHE_FILENAME} into data structure...')
 	global DNS_CACHE
 
 	if not os.path.isfile(DNS_CACHE_FILENAME):
@@ -116,6 +139,7 @@ def loadDNSCache() -> None:
 def updateDNSCache() -> None:
 	"""Update the DNS_CACHE.json file with the up to date
 	DNS_CACHE global variable. Call this before exiting the program."""
+	print('Updating DNS cache...')
 	with open(DNS_CACHE_FILENAME, 'w') as f:
 		fcntl.flock(f, fcntl.LOCK_EX)
 		json.dump(DNS_CACHE, f)
@@ -124,7 +148,7 @@ def updateDNSCache() -> None:
 def updateServerLog(hostname: str, answer: str, resolution: str) -> None:
 	"""Update the server log file in the following format:\n
 	www.google.com,172.217.0.164,API"""
-
+	print('Updating server log...')
 	with open(SERVER_LOG_FILENAME, 'a', newline='') as f:
 		# lock the file and write one row to it
 		fcntl.flock(f, fcntl.LOCK_EX)
@@ -132,6 +156,6 @@ def updateServerLog(hostname: str, answer: str, resolution: str) -> None:
 		writer.writerow([hostname, answer, resolution])
 		fcntl.flock(f, fcntl.LOCK_UN)
 
-if __name__ == "main":
+if __name__ == "__main__":
 	loadDNSCache()
 	main()
