@@ -7,13 +7,14 @@
 
 import sys, threading, os, random, json
 from socket import *
+from typing import List, Tuple
 
 DNS_CACHE_FILENAME = 'DNS_CACHE.json'
 DNS_CACHE = None
 
 def main():
-	host = "localhost" # Hostname. It can be changed to anything you desire.
-	port = 5001 # Port number.
+	host = 'localhost' # Hostname. It can be changed to anything you desire.
+	port = 9889 # Port number.
 
 	# create a socket object, SOCK_STREAM for TCP
 	serverSock = socket(AF_INET, SOCK_STREAM)
@@ -27,7 +28,7 @@ def main():
 	monitor = threading.Thread(target=monitorQuit, args=[])
 	monitor.start()
 
-	print("Server is listening...")
+	print('Server is listening...')
 
 	while 1:
 		# blocked until a remote machine connects to the local port
@@ -35,10 +36,19 @@ def main():
 		server = threading.Thread(target=dnsQuery, args=[connectionSock, addr[0]])
 		server.start()
 
-def dnsQuery(connectionSock: socket, srcAddress: tuple[str, str]):
+def dnsQuery(connectionSock: socket, srcAddress: Tuple[str, str]):
+	global DNS_CACHE
+
 	# check the DNS_CACHE to see if the host name exists
-	if (hostname := connectionSock.getpeername()[1]) in DNS_CACHE:
+	ipAddrs = []
+	clientHostname, clientPort = connectionSock.getpeername()
+	if clientHostname in DNS_CACHE:
+		ipAddrs = DNS_CACHE[clientHostname]
+	else:
 		pass
+
+	bestIp = dnsSelection(ipAddrs)
+
 	#set local file cache to predetermined file.
         #create file if it doesn't exist 
         #if it does exist, read the file line by line to look for a
@@ -52,7 +62,7 @@ def dnsQuery(connectionSock: socket, srcAddress: tuple[str, str]):
 	#Close the server socket.
 	pass
   
-def dnsSelection(ipList):
+def dnsSelection(ipList: List[str]):
 	#checking the number of IP addresses in the cache
 	#if there is only one IP address, return the IP address
 	#if there are multiple IP addresses, select one and return.
@@ -62,24 +72,28 @@ def dnsSelection(ipList):
 def monitorQuit() -> None:
 	while 1:
 		sentence = input()
-		if sentence == "exit":
+		if sentence == 'exit':
 			updateDNSCache()
 			os.kill(os.getpid(),9)
 
 def loadDNSCache() -> None:
 	"""Load the DNS_CACHE global variable with the contents of the
 	DNS_CACHE.json file. Each key: value pair is as follows: \n
-	{hostname: ipaddr}"""
+	{hostname: [ipaddr1, ipaddr2, ...]}"""
 	global DNS_CACHE
-	with open(DNS_CACHE_FILENAME) as f:
-		DNS_CACHE = json.load(f)
+
+	if not os.path.isfile(DNS_CACHE_FILENAME):
+		DNS_CACHE = {}
+
+	else:
+		with open(DNS_CACHE_FILENAME) as f:
+			DNS_CACHE = json.load(f)
 
 def updateDNSCache() -> None:
 	"""Update the DNS_CACHE.json file with the up to date
 	DNS_CACHE global variable. Call this before exiting the program."""
-	with open(DNS_CACHE_FILENAME) as f:
+	with open(DNS_CACHE_FILENAME, 'w') as f:
 		json.dump(DNS_CACHE, f)
-
 
 if __name__ == "main":
 	loadDNSCache()
