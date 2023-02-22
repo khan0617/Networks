@@ -98,9 +98,8 @@ def dnsQuery(connectionSock: socket, srcAddress: Tuple[str, str]) -> None:
     else:
         debugMsg(f"Cache MISS.", indent=True)
         try:
-            ipFromDnsQuery = gethostbyname(domainName)
-            ipAddrs.append(ipFromDnsQuery)
-            DNS_CACHE[domainName] = [ipFromDnsQuery]
+            _, _, ipAddrs = gethostbyname_ex(domainName)
+            DNS_CACHE[domainName] = ipAddrs
 
         except gaierror as e:
             debugMsg(f"Error: Failed to resolve {domainName}: {e}", indent=True)
