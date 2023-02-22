@@ -8,7 +8,7 @@ from socket import *
 def main():
 	while 1:
 		host = "localhost" # Remote hostname. It can be changed to anything you desire.
-		port = 5001 # Port number.
+		port = 9889 # Port number.
 
 		try:
 			cSock = socket(AF_INET, SOCK_STREAM)
@@ -18,6 +18,7 @@ def main():
 		try:
 			cSock.connect((host, port))
 		except error as msg:
+			print(f'Encountered error {msg}')
 			cSock = None # Handle exception
 
 		if cSock is None:
@@ -38,4 +39,5 @@ def main():
 		data = cSock.recv(1024).decode() # Receive from server.#py3 specific
 		print("Received:", data) # Print out the result.
 
-main()
+if __name__ == "__main__":
+    main()
