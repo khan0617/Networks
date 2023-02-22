@@ -41,26 +41,31 @@ def main():
         server = threading.Thread(target=dnsQuery, args=[connectionSock, addr[0]])
         server.start()
 
+
 def debugMsg(msg: str, indent: bool = False) -> None:
     """Log a msg to the console. If indent is true, add an indent to the text."""
     if not DEBUG_MESSAGES:
         return
-    
+
     if indent:
-        print(f'    {msg}')
+        print(f"    {msg}")
     else:
-        print(f'{msg}')
+        print(f"{msg}")
+
 
 def displayHelpMessage() -> None:
     """Show all available commands when the user types help."""
     indent = "    "
-    message = '\nProgram options:\n' + \
-        f'{indent}exit - Terminate the program\n' + \
-        f'{indent}help - Show this message again\n' + \
-        f'{indent}clear cache - Clear the DNS Cache (reset DNS_CACHE.json)\n' + \
-        f'{indent}clear log - Clear the server log (reset dns-server-log.csv)\n' + \
-        f'{indent}debug - Toggle debug output (default is ON)\n'
+    message = (
+        "\nProgram options:\n"
+        + f"{indent}exit - Terminate the program\n"
+        + f"{indent}help - Show this message again\n"
+        + f"{indent}clear cache - Clear the DNS Cache (reset DNS_CACHE.json)\n"
+        + f"{indent}clear log - Clear the server log (reset dns-server-log.csv)\n"
+        + f"{indent}debug - Toggle debug output (default is ON)\n"
+    )
     print(message)
+
 
 def dnsQuery(connectionSock: socket, srcAddress: Tuple[str, str]) -> None:
     """Given a connection socket to a client, receive a domainName from them,
@@ -68,39 +73,41 @@ def dnsQuery(connectionSock: socket, srcAddress: Tuple[str, str]) -> None:
     and send the ip address back to the client via sockets. \n
     This function will close the connectionSock."""
     global DNS_CACHE
-    debugMsg('\nIn dnsQuery(), waiting for message from client. Type exit to terminate.')
+    debugMsg(
+        "\nIn dnsQuery(), waiting for message from client. Type exit to terminate."
+    )
 
     # actually receive the domain name from the client
     # the client should send over something like "www.google.com"
     domainName = connectionSock.recv(1024).decode()
-    debugMsg(f'Server received {domainName} from client.', indent=True)
+    debugMsg(f"Server received {domainName} from client.", indent=True)
 
     # we'll need to build a response like "<hostname>:<answer>:<how request was resolved>"
     responseHostname = domainName
-    responseAnswer = ''
-    responseResolutionMethod = ''
+    responseAnswer = ""
+    responseResolutionMethod = ""
 
     # check the DNS_CACHE to see if the host name exists
     ipAddrs = []
     if domainName in DNS_CACHE:
-        debugMsg(f'Cache HIT!', indent=True)
-        responseResolutionMethod = 'CACHE'
+        debugMsg(f"Cache HIT!", indent=True)
+        responseResolutionMethod = "CACHE"
         ipAddrs = DNS_CACHE[domainName]
 
     # query the DNS and add it to the cache.
     else:
-        debugMsg(f'Cache MISS.', indent=True)
+        debugMsg(f"Cache MISS.", indent=True)
         try:
             ipFromDnsQuery = gethostbyname(domainName)
             ipAddrs.append(ipFromDnsQuery)
             DNS_CACHE[domainName] = [ipFromDnsQuery]
 
         except gaierror as e:
-            debugMsg(f'Error: Failed to resolve {domainName}: {e}', indent=True)
-            DNS_CACHE[domainName] = ['Host not found']
+            debugMsg(f"Error: Failed to resolve {domainName}: {e}", indent=True)
+            DNS_CACHE[domainName] = ["Host not found"]
 
         finally:
-            responseResolutionMethod = 'API'
+            responseResolutionMethod = "API"
             updateDNSCache(indentDebugMsg=True)
 
     # build and send the message to the client.
@@ -137,7 +144,9 @@ def dnsSelection(ipList: List[str]) -> str:
             bestIp = ip
             bestLatency = latency
 
-    debugMsg(f"In dnsSelection, best ip is {bestIp} with latency {bestLatency}", indent=True)
+    debugMsg(
+        f"In dnsSelection, best ip is {bestIp} with latency {bestLatency}", indent=True
+    )
     return bestIp
 
 
@@ -151,6 +160,7 @@ def getPingLatency(ip: str) -> float:
     latency = float(ping_output.stdout[latency_start:latency_end])
     return latency
 
+
 def monitorQuit() -> None:
     while 1:
         sentence = input()
@@ -159,19 +169,23 @@ def monitorQuit() -> None:
             debugMsg("Terminating server. Goodbye.")
             os.kill(os.getpid(), 9)
 
-        elif 'help' in sentence.lower():
+        elif "help" in sentence.lower():
             displayHelpMessage()
 
-        elif 'clear cache' in sentence.lower():
+        elif "clear cache" in sentence.lower():
             clearFile(DNS_CACHE_FILENAME)
 
-        elif 'clear log' in sentence.lower():
+        elif "clear log" in sentence.lower():
             clearFile(SERVER_LOG_FILENAME)
 
-        elif 'debug' in sentence.lower():
+        elif "debug" in sentence.lower():
             global DEBUG_MESSAGES
             DEBUG_MESSAGES = not DEBUG_MESSAGES
-            print('Debug messages enabled' if DEBUG_MESSAGES else 'Debug messages disabled')
+            print(
+                "Debug messages enabled"
+                if DEBUG_MESSAGES
+                else "Debug messages disabled"
+            )
 
 
 def loadDNSCache() -> None:
@@ -188,6 +202,7 @@ def loadDNSCache() -> None:
         with open(DNS_CACHE_FILENAME) as f:
             DNS_CACHE = json.load(f)
 
+
 def updateDNSCache(indentDebugMsg: bool = False) -> None:
     """Update the DNS_CACHE.json file with the up to date
     DNS_CACHE global variable. Call this before exiting the program.
@@ -197,6 +212,7 @@ def updateDNSCache(indentDebugMsg: bool = False) -> None:
         fcntl.flock(f, fcntl.LOCK_EX)
         json.dump(DNS_CACHE, f, indent=4)
         fcntl.flock(f, fcntl.LOCK_UN)
+
 
 def clearFile(filename: str) -> None:
     """Reset the file specified by filename."""
@@ -217,6 +233,7 @@ def clearFile(filename: str) -> None:
             f.write("")
             fcntl.flock(f, fcntl.LOCK_UN)
 
+
 def updateServerLog(hostname: str, answer: str, resolution: str) -> None:
     """Update the server log file in the following format:\n
     www.google.com,172.217.0.164,API"""
@@ -227,6 +244,7 @@ def updateServerLog(hostname: str, answer: str, resolution: str) -> None:
         writer = csv.writer(f)
         writer.writerow([hostname, answer, resolution])
         fcntl.flock(f, fcntl.LOCK_UN)
+
 
 if __name__ == "__main__":
     loadDNSCache()
