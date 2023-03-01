@@ -193,21 +193,25 @@ def loadDNSCache() -> None:
     hostname ipaddr1,ipaddr2,..."""
     debugMsg(f"Loading {DNS_CACHE_FILENAME} into data structure in loadDNSCache()...")
     global DNS_CACHE
+    DNS_CACHE = {}
 
-    if not os.path.isfile(DNS_CACHE_FILENAME):
-        DNS_CACHE = {}
-
-    else:
-        # each line in the cache is similar to the following:
-        # www.google.com 142.250.191.164,142.250.191.142,...
-        # there may only be one 
+    # each line in the cache is similar to the following:
+    # www.google.com 142.250.191.164,142.250.191.142,...
+    # there may only be one 
+    if os.path.isfile(DNS_CACHE_FILENAME):
         with open(DNS_CACHE_FILENAME) as f:
             for line in f:
                 if not line:
                     continue
 
-                key, value = line.split(" ")
-                value = value.split(',')
+                line = line.strip()
+                if 'host not found' in line.lower():
+                    key, value = line.split(" ")[0], ['Host not found']
+                
+                else:
+                    key, value = line.split(" ")
+                    value = value.split(',')
+
                 DNS_CACHE[key] = value
 
 
@@ -219,7 +223,10 @@ def updateDNSCache(indentDebugMsg: bool = False) -> None:
     with open(DNS_CACHE_FILENAME, "w") as f:
         fcntl.flock(f, fcntl.LOCK_EX)
         for key, value in DNS_CACHE.items():
-            f.write(f"{key} {','.join(value)}\n")
+            if value == 'Host not found':
+                f.write(f"{key} Host not found\n")
+            else:    
+                f.write(f"{key} {','.join(value)}\n")
         fcntl.flock(f, fcntl.LOCK_UN)
 
 
