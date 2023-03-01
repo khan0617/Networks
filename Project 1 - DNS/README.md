@@ -26,6 +26,8 @@ The server takes the following steps:
     - Initialize a TCP, IPv4 socket on `port 9889` with `hostname "localhost"`
     - Begin a "monitor" thread which listens for exit from the user to terminate the program.
     - Continuously wait for clients to connect, then initialize a thread with `dnsQuery()` as the target function for each.
+3. Upon program termination, two files will have been created if they did not exist previously: DNS_MAPPING.txt, and dns-server-log.csv
+    - If these files already existed when the program was running, they have been updated with any new queries.
 
 ## Server Functions
 `debugMsg(msg: str, indent: bool = False) -> None` - Log a msg to the console. If indent is true, add an indent to the text.
@@ -40,9 +42,9 @@ The server takes the following steps:
 
 `monitorQuit() -> None:` - This is the thread checking user input on the server. Handle all appropriate commands shown by `displayHelpMessage()`.
 
-`loadDNSCache() -> None` - Load the DNS_CACHE global variable with the contents of the DNS_CACHE.json file. Each key: value pair is as follows: `{hostname: [ipaddr1, ipaddr2, ...]}`
+`loadDNSCache() -> None` - Load the DNS_CACHE global variable with the contents of the DNS_MAPPING.txt file. Each line in the file is as follows: `hostname ipaddr1,ipaddr2,...`
 
-`updateDNSCache(indentDebugMsg: bool = False) -> None` - Update the DNS_CACHE.json file with the up to date DNS_CACHE global variable. Call this before exiting the program. when indentDebugMsg is true, debugMsg will be called with(..., indent=True)
+`updateDNSCache(indentDebugMsg: bool = False) -> None` - Update the DNS_CACHE file with the up to date DNS_CACHE global variable. Call this before exiting the program. When indentDebugMsg is true, debugMsg will be called with(..., indent=True)
 
 `clearFile(filename: str) -> None` - Reset the file specified by filename.
 

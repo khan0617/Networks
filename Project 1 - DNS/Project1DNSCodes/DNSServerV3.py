@@ -189,8 +189,8 @@ def monitorQuit() -> None:
 
 def loadDNSCache() -> None:
     """Load the DNS_CACHE global variable with the contents of the
-    DNS_CACHE.json file. Each key: value pair is as follows: \n
-    {hostname: [ipaddr1, ipaddr2, ...]}"""
+    DNS_CACHE.json file. Each line in the file is as follows (note the spaces and commas) \n
+    hostname ipaddr1,ipaddr2,..."""
     debugMsg(f"Loading {DNS_CACHE_FILENAME} into data structure in loadDNSCache()...")
     global DNS_CACHE
 
@@ -212,9 +212,9 @@ def loadDNSCache() -> None:
 
 
 def updateDNSCache(indentDebugMsg: bool = False) -> None:
-    """Update the DNS_CACHE.json file with the up to date
+    """Update the DNS_CACHE file with the up to date
     DNS_CACHE global variable. Call this before exiting the program.
-    when indentDebugMsg is true, debugMsg will be called with(..., indent=True)"""
+    When indentDebugMsg is true, debugMsg will be called with(..., indent=True)"""
     debugMsg("Updating DNS cache in updateDNSCache()...", indent=indentDebugMsg)
     with open(DNS_CACHE_FILENAME, "w") as f:
         fcntl.flock(f, fcntl.LOCK_EX)
