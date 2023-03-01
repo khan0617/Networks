@@ -11,7 +11,7 @@ from socket import *
 from typing import List, Tuple
 
 DNS_CACHE = None
-DNS_CACHE_FILENAME = "DNS_CACHE.json"
+DNS_CACHE_FILENAME = "DNS_MAPPING.txt"
 SERVER_LOG_FILENAME = "dns-server-log.csv"
 DEBUG_MESSAGES = True
 
@@ -198,8 +198,17 @@ def loadDNSCache() -> None:
         DNS_CACHE = {}
 
     else:
+        # each line in the cache is similar to the following:
+        # www.google.com 142.250.191.164,142.250.191.142,...
+        # there may only be one 
         with open(DNS_CACHE_FILENAME) as f:
-            DNS_CACHE = json.load(f)
+            for line in f:
+                if not line:
+                    continue
+
+                key, value = line.split(" ")
+                value = value.split(',')
+                DNS_CACHE[key] = value
 
 
 def updateDNSCache(indentDebugMsg: bool = False) -> None:
@@ -209,7 +218,8 @@ def updateDNSCache(indentDebugMsg: bool = False) -> None:
     debugMsg("Updating DNS cache in updateDNSCache()...", indent=indentDebugMsg)
     with open(DNS_CACHE_FILENAME, "w") as f:
         fcntl.flock(f, fcntl.LOCK_EX)
-        json.dump(DNS_CACHE, f, indent=4)
+        for key, value in DNS_CACHE.items():
+            f.write(f"{key} {','.join(value)}\n")
         fcntl.flock(f, fcntl.LOCK_UN)
 
 
@@ -222,7 +232,7 @@ def clearFile(filename: str) -> None:
         DNS_CACHE = {}
         with open(filename, "w") as f:
             fcntl.flock(f, fcntl.LOCK_EX)
-            json.dump(DNS_CACHE, f)
+            f.write("")
             fcntl.flock(f, fcntl.LOCK_UN)
 
     elif filename == SERVER_LOG_FILENAME:
