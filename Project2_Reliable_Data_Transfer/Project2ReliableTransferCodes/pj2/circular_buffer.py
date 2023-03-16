@@ -12,6 +12,8 @@ class circular_buffer:
 
     # do not modify this
     def push(self,pkt):
+        """Add a new packet to the buffer. If the buffer is full, return -1. 
+        Otherwise, it adds the packet to the buffer and updates the write pointer"""
         if(self.count==max):
             return -1
         else:
@@ -22,6 +24,8 @@ class circular_buffer:
 
     # do not modify this
     def pop(self):
+        """Removes the oldest packet from the buffer and return it. 
+        If the buffer is empty, it returns -1"""
         if(self.count==0):
             return -1
 
@@ -31,6 +35,7 @@ class circular_buffer:
 
     # do not modify this
     def read_all(self):
+        """Returns a list of all the packets in the buffer"""
         temp=[]
         read=self.read
         for i in range(self.count):
@@ -40,6 +45,7 @@ class circular_buffer:
 
     # do not modify this
     def isfull(self):
+        """Returns True if the buffer is full, and False otherwise"""
         if(self.count==self.max):
             return True
         else:

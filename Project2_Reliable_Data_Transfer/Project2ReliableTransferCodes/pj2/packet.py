@@ -8,6 +8,7 @@ class packet:
         self.checksum = self.get_checksum()
 
     def get_checksum(self):
+        """Calculate the checksum of this packet"""
         # map the packet data to an integer
         checksum=0
         if self.payload!=0:
@@ -18,5 +19,13 @@ class packet:
 
 def send_ack(AorB,ack):
     pkt=packet(acknum=ack)
-    pkt.checksum=pkt.get_checksum()
     to_layer_three(AorB,pkt)
+
+def checksum_valid(pkt: packet) -> bool:
+    """Return True if this packet's checksum is valid, else false."""
+    # verify checksum
+    curr_checksum = pkt.checksum
+    recalculated_checksum = pkt.get_checksum()
+    if curr_checksum != recalculated_checksum:
+        return False
+    return True
