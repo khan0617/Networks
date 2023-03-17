@@ -110,17 +110,17 @@ To evaluate program functionality, extensive debug logging is performed. To enab
 
 ### **Below shows the stop_and_wait debug output:**
 As is evident below, all events in program execution are visible and list their reason for occurring. We can see how corrupted packets or dropped packets are handled.
-![stop_and_wait debug outout](./stop_and_wait_debug_output.png)
+![stop_and_wait debug output](./stop_and_wait_debug_output.png)
 
 
 ### **Below shows the go_back_n debug output with standard simulation parameters:**
 Observe below how corrupted packets or dropped packets are handled. We can see when packets are resent or removed from the buffer as well, and when out of order packets are received in B.
-![go_back_n debug outout](./go_back_n_debug_output.png)
-
-### **Below shows the go_back_n debug output with corruption probability of 0.6 (default is 0.2):**
-With a high corruption probability, more packets are ignored or NAK'd as shown in the debug output. A has to resend packets more often as a result.
-![go_back_n debug outout](./go_back_n_high_corruption.png)
+![go_back_n debug output standard parameters](./go_back_n_debug_output.png)
 
 ### **Below shows the go_back_n debug output with loss probability of 0.8 (default is 0.3):**
 With a very high loss probability, we have to send packets much more. The below output shows highlights this well. Notice how (rrr...) and (sss...) had to be resent many times due to the timer interrupt (since packets were lost B).
-![go_back_n debug outout](./go_back_n_high_loss.png)
+![go_back_n debug output high loss](./go_back_n_high_loss.png)
+
+### **Below shows the go_back_n debug output with corruption probability of 0.6 (default is 0.2):**
+With a high corruption probability, more packets are ignored or NAK'd as shown in the debug output. A has to resend packets more often as a result. <br>
+![go_back_n debug output high corruption](./go_back_n_high_corruption.png)
