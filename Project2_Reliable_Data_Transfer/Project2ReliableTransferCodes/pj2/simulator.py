@@ -12,7 +12,7 @@ class simulator:
         self.lossprob = 0.3  # probability that a packet is dropped
         self.corruptprob = 0.2  # probability that one bit is packet is flipped
         self.Lambda = 1000  # arrival rate of messages from layer 5
-        self.nsimmax = 27  # number of msgs to generate, then stop
+        self.nsimmax = 20  # number of msgs to generate, then stop
         self.TRACE = 0  # for your debugging
 
 

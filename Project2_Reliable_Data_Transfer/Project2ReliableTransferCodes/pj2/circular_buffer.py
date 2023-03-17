@@ -1,3 +1,4 @@
+from pj2.packet import packet
 class circular_buffer:
     # you may want to use this data structure to implement the window for the sender
     # do not modify this
@@ -23,8 +24,8 @@ class circular_buffer:
         self.count=self.count+1
 
     # do not modify this
-    def pop(self):
-        """Removes the oldest packet from the buffer and return it. 
+    def pop(self) -> packet:
+        """Removes the oldest packet from the buffer. 
         If the buffer is empty, it returns -1"""
         if(self.count==0):
             return -1
