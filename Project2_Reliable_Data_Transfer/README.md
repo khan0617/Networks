@@ -82,7 +82,7 @@ project2/
 
 
 # Go Back N Implementation Description
-## B.py (Go Back N receiver side) is basically the same as the Stop and Wait code.
+## B.py (Go Back N receiver side) is nearly identical to Stop and Wait code.
 **NOTE**: If you wish to display debug messages for B.py, change `b = B()` to `b = B(debug_msgs=True)`
 
 ## A.py (Go Back N sender side) functions
