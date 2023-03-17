@@ -49,6 +49,7 @@ project2/
 ## Note that all code is sufficiently commented as well and this summarizes the comments.
 ## B.py (stop and wait receiver side) functions
 **NOTE**: If you wish to display debug messages for B.py, change `b = B()` to `b = B(debug_msgs=True)`
+
 `B_input(self, pkt: packet)`:
 1. Verify the packet's checksum (send NAK if bad).
 2. Verify the packet's sequence number (resend most recent ACK if packet's seqnum is old).
@@ -62,6 +63,7 @@ project2/
 
 ## A.py (stop and wait sender side) functions
 **NOTE**: If you wish to display debug messages for A.py, change `a = A()` to `a = A(debug_msgs=True)`
+
 `A_input(self, pkt: packet)`:
 1. Verify B's packet's checksum (resend the previous packet if it's bad).
 2. See if we received an ACK for the packet we just send. If so, remove any timers and update sequence number.
@@ -87,6 +89,7 @@ project2/
 
 ## A.py (Go Back N sender side) functions
 **NOTE**: If you wish to display debug messages for A.py, change `a = A()` to `a = A(debug_msgs=True)`
+
 `A_output(self, m: msg)`:
 - Send a packet to B and update the sender buffer. Drop the packet if buffer is full.
 
