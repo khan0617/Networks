@@ -19,21 +19,17 @@ class B:
     def B_input(self, pkt: packet):
         """Process the packet received from the layer 3.
         Verify the packet's info and send ACK/NAK through the network as needed."""
-        if pkt is None:
-             self.show_debug_msg(f'--B{self.dbg_num}-- Received NONE pkt from A, self.seqnum {self.seqnum} sending NAK for seqnum {self.seqnum}....')
-             self.B_send_nak()
-             return
-        
-        # B just received an old packet from A. Resend the ACK.
-        if pkt.seqnum < self.seqnum:
-            self.show_debug_msg(f'--B{self.dbg_num}-- Received old pkt from A, pkt.seqnum {pkt.seqnum if pkt else "NONE"} != self.seqnum {self.seqnum}, resending ACK....')
-            send_ack("B", pkt.seqnum)
-            return
 
         # verify checksum
         if not checksum_valid(pkt):
             self.show_debug_msg(f'--B{self.dbg_num}-- Received corrupted (bad checksum) packet from A. Sending NAK.')
             self.B_send_nak()
+            return
+        
+        # B just received an old packet from A. Resend the ACK.
+        if pkt.seqnum < self.seqnum:
+            self.show_debug_msg(f'--B{self.dbg_num}-- Received old pkt from A, pkt.seqnum {pkt.seqnum if pkt else "NONE"} != self.seqnum {self.seqnum}, resending ACK....')
+            send_ack("B", pkt.seqnum)
 
         else:
             # send an ACK and the received data to the application side.
