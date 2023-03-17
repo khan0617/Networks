@@ -60,4 +60,4 @@ class B:
 
 
 # to enable debug messages, create "b" like this instead: b = B(debug_msgs=True)
-b = B(debug_msgs=False)
+b = B()

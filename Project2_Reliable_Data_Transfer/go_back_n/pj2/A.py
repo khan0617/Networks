@@ -118,4 +118,4 @@ class A:
             print(message)
             self.dbg_num += 1
 
-a = A(debug_msgs=False)
+a = A()
