@@ -5,3 +5,5 @@ Project 1 - DNS/Project1DNSCodes/Python3/DNS_CACHE.json
 .vscode/launch.json
 __pycache__/
 *.pyc
+*.DS_Store
+*.zip
